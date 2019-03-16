@@ -1,76 +1,48 @@
 #include <iostream>
 #include <stddef.h>
-#include <cstring>
 #include <string>
-#include <cassert>
+#include "string.h"
 
 using namespace std;
 
-class String {
-    public:
-        typedef char * iterator;
-        typedef const char * const_pointer;
-        typedef unsigned long size_type;
-
-        String() : __start(nullptr), __write(nullptr), __end(nullptr),
-                   __inc(2) { }
-        String(const char *str);
-        String(size_type n, char c);
-        String(const String& str);
-        ~String() { delete []__start; }
-
-        String& operator=(const String& str);
-        String operator+(const String& str);
-        bool operator>(const String& str);
-        bool operator<(const String& str);
-        bool operator==(const String& str);
-        char& operator[](int index);
-
-        iterator begin() const { return __start; }
-        iterator end() const { return __end; }
-        size_type size() const { return __write - __start; }
-        size_type capacity() const { return __end - __write; }
-        size_type max_size() const { return __end - __start; }
-        const_pointer c_str() const { return __start; }
-        bool empty() const { return __start == __write; }
-        void append(const char *str, size_type pos, size_type n);
-        void append(const String& str, size_type pos, size_type n);
-        void append(const char *str, size_type n);
-        void append(const char *str);
-        void append(const String& str);
-        void append(size_type n, char c);
-        int compare(const char *str);
-        int compare(const String& str);
-        void insert(size_type index, const char *str);
-        void insert(size_type index, const String& str);
-        void reserve() {  }
-        void swap() {  }
-    private:
-        void __copy(const char *str);
-        void __insert(size_type index, const char *str, size_type pos, size_type n);
-        char *__start;
-        char *__write;
-        char *__end;
-        size_type __inc;
-};
+void
+String::__init()
+{
+    __start = nullptr;
+    __write = nullptr;
+    __end = nullptr;
+    __inc = 2;
+}
 
 void
-String::__copy(const char *_str)
+String::__alloc(size_type n)
 {
-    if (_str == nullptr)
-        return;
+    char *_str = __start;
+    size_type _size = size();
+    while (__inc < size() + n)
+        __inc *= 2;
+    __start = new char[__inc];
+    if (_str)
+        std::strcpy(__start, _str);
+    __write = __start + _size;
+    __end = __start + __inc;
+    delete []_str;
+}
+
+void
+String::__copy(const_pointer _str)
+{
     size_type len = strlen(_str);
-    __start = new char[len + 1];
-    strcpy(__start, _str);
+    __alloc(len + 1);
+    std::strcpy(__start, _str);
     __write = __start + len;
-    __end = __start + len + 1;
 }
 
 /*
  * str[pos - n] --> before this->str[index]
  */
 void
-String::__insert(size_type index, const char *_str, size_type pos, size_type n)
+String::__insert(size_type index, const_pointer _str, size_type pos, size_type n)
 {
     size_type len = strlen(_str);
     if (index > size())
@@ -79,26 +51,16 @@ String::__insert(size_type index, const char *_str, size_type pos, size_type n)
         n = len;
     if (pos + n > len)
         return;
-    if (n + 1 > capacity()) {
-        char *_str = __start;
-        size_type _size = size();
-        while (__inc < size() + n + 1)
-            __inc *= 2;
-        __start = new char[__inc];
-        if (_str)
-            strcpy(__start, _str);
-        __write = __start + _size;
-        __end = __start + __inc;
-        delete []_str;
-    }
+    if (n + 1 > capacity())
+        __alloc(n + 1);
     if (_str) {
         if (index < size()) {  // insert
-            memcpy(__start + index + n, __start + index, size() - index);
+            std::memcpy(__start + index + n, __start + index, size() - index);
             __start[size() + n] = '\0';
-            memcpy(__start + index, _str + pos, n);
+            std::memcpy(__start + index, _str + pos, n);
             __write = __start + size() + n;
         } else {  // append
-            memcpy(__write, _str + pos, n);
+            std::memcpy(__write, _str + pos, n);
             __write += n;
         }
     }
@@ -106,31 +68,64 @@ String::__insert(size_type index, const char *_str, size_type pos, size_type n)
         *__write = '\0';
 }
 
-String::String(const char *_str)
+String::String(const_pointer _str)
 {
+    __init();
     __copy(_str);
-    __inc = 2;
 }
 
 String::String(size_type n, char c)
 {
     char s[n + 1];
-    memset(s, c, n);
+    std::memset(s, c, n);
     s[n] = '\0';
+    __init();
     __copy(s);
 }
 
 String::String(const String& _str)
 {
+    __init();
     __copy(_str.c_str());
-    __inc = _str.__inc;
+}
+
+void
+String::resize(size_type n, char c)
+{
+    if (n < size())
+        std::memset(__start + n, 0, size() - n);
+    else if (n < max_size())
+        std::memset(__write, c, n - size());
+    else {
+        __alloc(n);
+        std::memset(__write, c, n - size());
+    }
+    __write = __start + n;
+}
+
+void
+String::resize(size_type n)
+{
+    resize(n, 0);
+}
+
+void
+String::reserve(size_type res)
+{
+    if (res > capacity())
+        __alloc(res);
+}
+
+void
+String::clear()
+{
+    resize(0);
 }
 
 String&
 String::operator=(const String& _str)
 {
     __copy(_str.c_str());
-    __inc = _str.__inc;
 
     return *this;
 }
@@ -146,29 +141,29 @@ String::operator+(const String& _str)
 bool
 String::operator>(const String& _str)
 {
-    return strcmp(c_str(), _str.c_str()) > 0;
+    return std::strcmp(c_str(), _str.c_str()) > 0;
 }
 
 bool
 String::operator<(const String& _str)
 {
-    return strcmp(c_str(), _str.c_str()) < 0;
+    return std::strcmp(c_str(), _str.c_str()) < 0;
 }
 
 bool
 String::operator==(const String& _str)
 {
-    return strcmp(c_str(), _str.c_str()) == 0;
+    return std::strcmp(c_str(), _str.c_str()) == 0;
 }
 
 char&
-String::operator[](int index)
+String::operator[](size_type index)
 {
     return const_cast<char&>(c_str()[index]);
 }
 
 void
-String::append(const char *_str, size_type pos, size_type n)
+String::append(const_pointer _str, size_type pos, size_type n)
 {
     __insert(size(), _str, pos, n);
 }
@@ -180,13 +175,13 @@ String::append(const String& _str, size_type pos, size_type n)
 }
 
 void
-String::append(const char *_str, size_type n)
+String::append(const_pointer _str, size_type n)
 {
     append(_str, 0, n);
 }
 
 void
-String::append(const char *_str)
+String::append(const_pointer _str)
 {
     append(_str, strlen(_str));
 }
@@ -207,7 +202,7 @@ String::append(size_type n, char c)
 }
 
 int
-String::compare(const char *_str)
+String::compare(const_pointer _str)
 {
     return strcmp(c_str(), _str);
 }
@@ -219,7 +214,7 @@ String::compare(const String& _str)
 }
 
 void
-String::insert(size_type index, const char *_str)
+String::insert(size_type index, const_pointer _str)
 {
     __insert(index, _str, 0, strlen(_str));
 }
@@ -230,14 +225,18 @@ String::insert(size_type index, const String& _str)
     insert(index, _str.c_str());
 }
 
+void
+String::swap(String& _str)
+{
+    std::swap(*this, _str);
+}
+
 int
 main(void)
 {
-    String a;
-    a.append("helloreadygo");
-    cout << a.c_str() << endl;
-    a.insert(5, "aaa123");
-    cout << a.c_str() << endl;
-    a.append("deskmate", 2, 3);
-    cout << a.c_str() << endl;
+    String a("hello");
+    String b("12234");
+    a.swap(b);
+    cout << a.c_str() << b.c_str() << endl;
+    string s;
 }
