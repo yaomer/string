@@ -1,9 +1,5 @@
 #include <iostream>
-#include <stddef.h>
-#include <string>
 #include "string.h"
-
-using namespace std;
 
 void
 String::__init()
@@ -32,19 +28,17 @@ String::__alloc(size_type n)
 void
 String::__copy(const_pointer _str)
 {
-    size_type len = strlen(_str);
+    size_type len = std::strlen(_str);
     __alloc(len + 1);
     std::strcpy(__start, _str);
     __write = __start + len;
 }
 
-/*
- * str[pos - n] --> before this->str[index]
- */
+// str[pos - n] --> before this->str[index]
 void
 String::__insert(size_type index, const_pointer _str, size_type pos, size_type n)
 {
-    size_type len = strlen(_str);
+    size_type len = std::strlen(_str);
     if (index > size())
         index = size();
     if (n > len)
@@ -162,6 +156,20 @@ String::operator[](size_type index)
     return const_cast<char&>(c_str()[index]);
 }
 
+std::ostream&
+operator<<(std::ostream& _cout, const String& _str)
+{
+    _cout << _str.c_str();
+    return _cout;
+}
+
+std::istream&
+operator>>(std::istream& _cin, const String& _str)
+{
+    // _cin >> _str.c_str();
+    // return _cin;
+}
+
 void
 String::append(const_pointer _str, size_type pos, size_type n)
 {
@@ -183,7 +191,7 @@ String::append(const_pointer _str, size_type n)
 void
 String::append(const_pointer _str)
 {
-    append(_str, strlen(_str));
+    append(_str, std::strlen(_str));
 }
 
 void
@@ -204,7 +212,7 @@ String::append(size_type n, char c)
 int
 String::compare(const_pointer _str)
 {
-    return strcmp(c_str(), _str);
+    return std::strcmp(c_str(), _str);
 }
 
 int
@@ -216,7 +224,7 @@ String::compare(const String& _str)
 void
 String::insert(size_type index, const_pointer _str)
 {
-    __insert(index, _str, 0, strlen(_str));
+    __insert(index, _str, 0, std::strlen(_str));
 }
 
 void
@@ -229,14 +237,4 @@ void
 String::swap(String& _str)
 {
     std::swap(*this, _str);
-}
-
-int
-main(void)
-{
-    String a("hello");
-    String b("12234");
-    a.swap(b);
-    cout << a.c_str() << b.c_str() << endl;
-    string s;
 }

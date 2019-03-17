@@ -1,6 +1,9 @@
 #ifndef _STRING_H
 #define _STRING_H
 
+#include <iostream>
+#include <stddef.h>
+
 class String {
     public:
         typedef char * iterator;
@@ -53,5 +56,8 @@ class String {
         char *__end;
         size_type __inc;
 };
+
+std::ostream& operator<<(std::ostream& _cout, const String& _str);
+std::istream& operator>>(std::istream& _cin, const String& _str);
 
 #endif /* _STRING_H */
