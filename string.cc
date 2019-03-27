@@ -1,8 +1,6 @@
 #include <iostream>
 #include "string.h"
 
-using namespace std;
-
 void
 String::__init()
 {
