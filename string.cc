@@ -125,20 +125,14 @@ String::operator=(const String& _str)
 }
 
 String
-String::operator+(const String& _str)
+operator+(const String& lhs, const String& rhs)
 {
-    append(_str);
+    String _str;
+    _str.append(lhs);
+    _str.append(rhs);
 
-    return *this;
+    return _str;
 }
-
-// String
-// operator+(String& lhs, const String& rhs)
-// {
-//     lhs.append(rhs);
-//
-//     return lhs;
-// }
 
 String
 String::operator+=(const String& _str)

@@ -22,7 +22,6 @@ class String {
         ~String() { delete []__start; }
 
         String& operator=(const String& _str);
-        String operator+(const String& _str);
         String operator+=(const String& _str);
         bool operator>(const String& _str);
         bool operator>=(const String& _str);
@@ -81,6 +80,6 @@ class String {
 
 std::ostream& operator<<(std::ostream& _cout, const String& _str);
 std::istream& operator>>(std::istream& _cin, String& _str);
-// String operator+(String& lhs, const String& rhs);
+String operator+(const String& lhs, const String& rhs);
 
 #endif /* _STRING_H */
