@@ -345,7 +345,7 @@ String::find_first_not_of(const_pointer _str)
 {
     const_pointer p, q;
 
-    for (p = cbegin(); p > cend(); p++) {
+    for (p = cbegin(); p < cend(); p++) {
         for (q = _str; *q; q++)
             if (*q == *p)
                 break;
