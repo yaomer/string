@@ -14,12 +14,12 @@ class String {
 
         static const size_type npos = static_cast<size_type>(-1);
 
-        String() : __start(nullptr), __write(nullptr), __end(nullptr),
-                   __inc(2) { }
+        String() : _start(nullptr), _write(nullptr), _end(nullptr),
+                   _inc(2) { }
         String(const_pointer _str);
         String(size_type n, value_type c);
         String(const String& _str);
-        ~String() { delete []__start; }
+        ~String() { delete []_start; }
 
         String& operator=(const String& _str);
         String operator+=(const String& _str);
@@ -31,15 +31,18 @@ class String {
         bool operator!=(const String& _str);
         value_type& operator[](size_type index);
 
-        iterator begin() const { return __start; }
-        iterator end() const { return __end; }
-        const_iterator cbegin() const {return __start; }
-        const_iterator cend() const {return __end; } 
-        size_type size() const { return __write - __start; }
-        size_type capacity() const { return __end - __write; }
-        size_type max_size() const { return __end - __start; }
-        const_pointer c_str() const { return __start; }
-        bool empty() const { return __start == __write; }
+        String(String&& _str);
+        String& operator=(String&& _str);
+
+        iterator begin() const { return _start; }
+        iterator end() const { return _end; }
+        const_iterator cbegin() const {return _start; }
+        const_iterator cend() const {return _end; } 
+        size_type size() const { return _write - _start; }
+        size_type capacity() const { return _end - _write; }
+        size_type max_size() const { return _end - _start; }
+        const_pointer c_str() const { return _start; }
+        bool empty() const { return _start == _write; }
         void clear();
         void resize(size_type n, value_type c);
         void resize(size_type n);
@@ -68,14 +71,14 @@ class String {
         void replace(size_type pos, size_type n, const_pointer _str);
         String substr(size_type pos = 0, size_type = npos);
     private:
-        void __init();
-        void __copy(const_pointer _str);
-        void __insert(size_type index, const_pointer _str, size_type pos, size_type n);
-        void __alloc(size_type n);
-        char *__start;
-        char *__write;
-        char *__end;
-        size_type __inc;
+        void _init();
+        void _copy(const_pointer _str);
+        void _insert(size_type index, const_pointer _str, size_type pos, size_type n);
+        void _alloc(size_type n);
+        char *_start;
+        char *_write;
+        char *_end;
+        size_type _inc;
 };
 
 std::ostream& operator<<(std::ostream& _cout, const String& _str);

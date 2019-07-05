@@ -1,44 +1,42 @@
 #include <iostream>
+#include <cstring>
 #include "string.h"
 
-void
-String::__init()
+void String::_init()
 {
-    __start = nullptr;
-    __write = nullptr;
-    __end = nullptr;
-    __inc = 2;
+    _start = nullptr;
+    _write = nullptr;
+    _end = nullptr;
+    _inc = 2;
 }
 
-void
-String::__alloc(size_type n)
+// 对String进行扩容
+void String::_alloc(size_type n)
 {
-    char *_str = __start;
+    char *_str = _start;
     size_type _size = size();
-    while (__inc < size() + n)
-        __inc *= 2;
-    __start = new char[__inc];
-    if (_str)
-        std::strcpy(__start, _str);
-    __write = __start + _size;
-    __end = __start + __inc;
+    while (_inc < size() + n)
+        _inc *= 2;
+    _start = new char[_inc];
+    if (_str) strcpy(_start, _str);
+    _write = _start + _size;
+    _end = _start + _inc;
     delete []_str;
 }
 
-void
-String::__copy(const_pointer _str)
+// 用于copy constructor and copy assign operator
+void String::_copy(const_pointer _str)
 {
-    size_type len = std::strlen(_str);
-    __alloc(len + 1);
-    std::strcpy(__start, _str);
-    __write = __start + len;
+    size_type len = strlen(_str);
+    _alloc(len + 1);
+    strcpy(_start, _str);
+    _write = _start + len;
 }
 
 // str[pos - n] --> before this->str[index]
-void
-String::__insert(size_type index, const_pointer _str, size_type pos, size_type n)
+void String::_insert(size_type index, const_pointer _str, size_type pos, size_type n)
 {
-    size_type len = std::strlen(_str);
+    size_type len = strlen(_str);
     if (index > size())
         index = size();
     if (n > len)
@@ -46,86 +44,101 @@ String::__insert(size_type index, const_pointer _str, size_type pos, size_type n
     if (pos + n > len)
         return;
     if (n + 1 > capacity())
-        __alloc(n + 1);
+        _alloc(n + 1);
     if (_str) {
         if (index < size()) {  // insert
-            std::memcpy(__start + index + n, __start + index, size() - index);
-            __start[size() + n] = '\0';
-            std::memcpy(__start + index, _str + pos, n);
-            __write = __start + size() + n;
+            memcpy(_start + index + n, _start + index, size() - index);
+            _start[size() + n] = '\0';
+            memcpy(_start + index, _str + pos, n);
+            _write = _start + size() + n;
         } else {  // append
-            std::memcpy(__write, _str + pos, n);
-            __write += n;
+            memcpy(_write, _str + pos, n);
+            _write += n;
         }
     }
     if (index >= size())
-        *__write = '\0';
+        *_write = '\0';
 }
 
 String::String(const_pointer _str)
 {
-    __init();
-    __copy(_str);
+    _init();
+    _copy(_str);
 }
 
 String::String(size_type n, value_type c)
 {
     char s[n + 1];
-    std::memset(s, c, n);
+    memset(s, c, n);
     s[n] = '\0';
-    __init();
-    __copy(s);
+    _init();
+    _copy(s);
 }
 
 String::String(const String& _str)
 {
-    __init();
-    __copy(_str.c_str());
+    std::cout << "&\n";
+    _init();
+    _copy(_str.c_str());
 }
 
-void
-String::resize(size_type n, value_type c)
+String::String(String&& _str)
+{
+    std::cout << "&&\n";
+    _start = _str._start;
+    _write = _str._write;
+    _end = _str._end;
+    _inc = _str._inc;
+    _str._start = nullptr;
+}
+
+String& String::operator=(String&& _str)
+{
+    _start = _str._start;
+    _write = _str._write;
+    _end = _str._end;
+    _inc = _str._inc;
+    _str._start = nullptr;
+    return *this;
+}
+
+void String::resize(size_type n, value_type c)
 {
     if (n < size())
-        std::memset(__start + n, 0, size() - n);
+        memset(_start + n, 0, size() - n);
     else if (n < max_size())
-        std::memset(__write, c, n - size());
+        memset(_write, c, n - size());
     else {
-        __alloc(n);
-        std::memset(__write, c, n - size());
+        _alloc(n);
+        memset(_write, c, n - size());
     }
-    __write = __start + n;
+    _write = _start + n;
 }
 
-void
-String::resize(size_type n)
+void String::resize(size_type n)
 {
     resize(n, 0);
 }
 
-void
-String::reserve(size_type res)
+void String::reserve(size_type res)
 {
     if (res > capacity())
-        __alloc(res);
+        _alloc(res);
 }
 
-void
-String::clear()
+void String::clear()
 {
     resize(0);
 }
 
-String&
-String::operator=(const String& _str)
+String& String::operator=(const String& _str)
 {
-    __copy(_str.c_str());
+    _copy(_str.c_str());
 
     return *this;
 }
 
-String
-operator+(const String& lhs, const String& rhs)
+String operator+(const String& lhs, const String& rhs)
 {
     String _str;
     _str.append(lhs);
@@ -134,66 +147,56 @@ operator+(const String& lhs, const String& rhs)
     return _str;
 }
 
-String
-String::operator+=(const String& _str)
+String String::operator+=(const String& _str)
 {
     append(_str);
 
     return *this;
 }
 
-bool
-String::operator>(const String& _str)
+bool String::operator>(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) > 0;
+    return strcmp(c_str(), _str.c_str()) > 0;
 }
 
-bool
-String::operator>=(const String& _str)
+bool String::operator>=(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) >= 0;
+    return strcmp(c_str(), _str.c_str()) >= 0;
 }
 
-bool
-String::operator<(const String& _str)
+bool String::operator<(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) < 0;
+    return strcmp(c_str(), _str.c_str()) < 0;
 }
 
-bool
-String::operator<=(const String& _str)
+bool String::operator<=(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) <= 0;
+    return strcmp(c_str(), _str.c_str()) <= 0;
 }
 
-bool
-String::operator==(const String& _str)
+bool String::operator==(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) == 0;
+    return strcmp(c_str(), _str.c_str()) == 0;
 }
 
-bool
-String::operator!=(const String& _str)
+bool String::operator!=(const String& _str)
 {
-    return std::strcmp(c_str(), _str.c_str()) != 0;
+    return strcmp(c_str(), _str.c_str()) != 0;
 }
 
-String::value_type&
-String::operator[](size_type index)
+String::value_type& String::operator[](size_type index)
 {
     return const_cast<char&>(c_str()[index]);
 }
 
-std::ostream&
-operator<<(std::ostream& _cout, const String& _str)
+std::ostream& operator<<(std::ostream& _cout, const String& _str)
 {
     _cout << _str.c_str();
 
     return _cout;
 }
 
-std::istream&
-operator>>(std::istream& _cin, String& _str)
+std::istream& operator>>(std::istream& _cin, String& _str)
 {
     char c;
 
@@ -203,38 +206,32 @@ operator>>(std::istream& _cin, String& _str)
     return _cin;
 }
 
-void
-String::append(const_pointer _str, size_type pos, size_type n)
+void String::append(const_pointer _str, size_type pos, size_type n)
 {
-    __insert(size(), _str, pos, n);
+    _insert(size(), _str, pos, n);
 }
 
-void
-String::append(const String& _str, size_type pos, size_type n)
+void String::append(const String& _str, size_type pos, size_type n)
 {
     append(_str.c_str(), pos, n);
 }
 
-void
-String::append(const_pointer _str, size_type n)
+void String::append(const_pointer _str, size_type n)
 {
     append(_str, 0, n);
 }
 
-void
-String::append(const_pointer _str)
+void String::append(const_pointer _str)
 {
-    append(_str, std::strlen(_str));
+    append(_str, strlen(_str));
 }
 
-void
-String::append(const String& _str)
+void String::append(const String& _str)
 {
     append(_str.c_str());
 }
 
-void
-String::append(size_type n, value_type c)
+void String::append(size_type n, value_type c)
 {
     char s[n + 1];
     memset(s, c, n);
@@ -242,68 +239,58 @@ String::append(size_type n, value_type c)
     append(s);
 }
 
-int
-String::compare(const_pointer _str)
+int String::compare(const_pointer _str)
 {
-    return std::strcmp(c_str(), _str);
+    return strcmp(c_str(), _str);
 }
 
-int
-String::compare(const String& _str)
+int String::compare(const String& _str)
 {
     return compare(_str.c_str());
 }
 
-void
-String::insert(size_type index, const_pointer _str)
+void String::insert(size_type index, const_pointer _str)
 {
-    __insert(index, _str, 0, std::strlen(_str));
+    _insert(index, _str, 0, strlen(_str));
 }
 
-void
-String::insert(size_type index, const String& _str)
+void String::insert(size_type index, const String& _str)
 {
     insert(index, _str.c_str());
 }
 
-void
-String::erase(size_type pos, size_type n)
+void String::erase(size_type pos, size_type n)
 {
     if (pos + n > size())
         return;
-    std::memcpy(__start + pos, __start + pos + n, size() - pos - n);
-    __write -= n;
-    *__write = '\0';
+    memcpy(_start + pos, _start + pos + n, size() - pos - n);
+    _write -= n;
+    *_write = '\0';
 }
 
-void
-String::erase(size_type pos)
+void String::erase(size_type pos)
 {
     erase(pos, 1);
 }
 
-void
-String::push_back(value_type c)
+void String::push_back(value_type c)
 {
     append(1, c);
 }
 
-void
-String::pop_back()
+void String::pop_back()
 {
     erase(size() - 1, 1);
 }
 
-String::size_type
-String::find(const_pointer _str)
+String::size_type String::find(const_pointer _str)
 {
     const_pointer p;
 
-    return (p = std::strstr(c_str(), _str)) ? p - begin() : npos;
+    return (p = strstr(c_str(), _str)) ? p - begin() : npos;
 }
 
-String::size_type
-String::rfind(const_pointer _str)
+String::size_type String::rfind(const_pointer _str)
 {
     const_pointer p, q, r;
 
@@ -316,8 +303,7 @@ String::rfind(const_pointer _str)
     return npos;
 }
 
-String::size_type
-String::find_first_of(const_pointer _str)
+String::size_type String::find_first_of(const_pointer _str)
 {
     const_pointer p, q;
 
@@ -328,8 +314,7 @@ String::find_first_of(const_pointer _str)
     return npos;
 }
 
-String::size_type
-String::find_last_of(const_pointer _str)
+String::size_type String::find_last_of(const_pointer _str)
 {
     const_pointer p, q;
 
@@ -340,8 +325,7 @@ String::find_last_of(const_pointer _str)
     return npos;
 }
 
-String::size_type
-String::find_first_not_of(const_pointer _str)
+String::size_type String::find_first_not_of(const_pointer _str)
 {
     const_pointer p, q;
 
@@ -355,8 +339,7 @@ String::find_first_not_of(const_pointer _str)
     return npos;
 }
 
-String::size_type
-String::find_last_not_of(const_pointer _str)
+String::size_type String::find_last_not_of(const_pointer _str)
 {
     const_pointer p, q;
 
@@ -370,8 +353,7 @@ String::find_last_not_of(const_pointer _str)
     return npos;
 }
 
-void
-String::replace(size_type pos, size_type n, const_pointer _str)
+void String::replace(size_type pos, size_type n, const_pointer _str)
 {
     if (pos + n > size())
         return;
@@ -379,8 +361,7 @@ String::replace(size_type pos, size_type n, const_pointer _str)
     insert(pos, _str);
 }
 
-String
-String::substr(size_type pos, size_type n)
+String String::substr(size_type pos, size_type n)
 {
     String *_str = new String;
 
@@ -388,8 +369,7 @@ String::substr(size_type pos, size_type n)
     return *_str;
 }
 
-void
-String::swap(String& _str)
+void String::swap(String& _str)
 {
     std::swap(*this, _str);
 }
